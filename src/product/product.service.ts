@@ -4,7 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
-import { IsUUID } from 'class-validator';
+import { validate as IsUUID } from 'uuid';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 
@@ -42,8 +42,26 @@ export class ProductService {
     });
   }
 
-  findOne(term: string) {
-    return `This action returns a #${term} product`;
+  async findOne(term: string) {
+
+    let product: Product;
+
+    if( IsUUID(term)){
+      product = await this.productRepository.findOneBy({ id: term });
+    }else{
+      const queryBuilder = this.productRepository.createQueryBuilder('prod');
+      product = await queryBuilder
+        .where('LOWER(title) =:title OR slug =:slug', {
+          title: term.toLowerCase(),
+          slug: term.toLowerCase()
+        }).getOne();
+    };
+
+
+    if (!product) {
+      throw new BadRequestException(`Product with term "${term}" not found`);
+    }
+    return product;
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
