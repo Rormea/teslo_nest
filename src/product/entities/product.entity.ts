@@ -1,5 +1,5 @@
 
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
@@ -8,7 +8,7 @@ export class Product {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'text'})
+    @Column({ type: 'text', unique: true })
     title:string;
 
     @Column({ type: 'float', default: 0 })
@@ -29,6 +29,9 @@ export class Product {
     @Column({ type: 'text'})
     gender: string;
 
+    @Column({ type: 'text', array: true, default: [] })
+    tags: string[];
+
     @BeforeInsert()
     checkSlugInsert() {
         if (!this.slug) {
@@ -38,7 +41,17 @@ export class Product {
         .toLowerCase()
         .replaceAll(' ', '-')
         .replaceAll("'", '')
-    }
+    };
+
+    @BeforeUpdate()
+    checkSlugUpdate() {
+        this.slug = this.slug
+        .toLowerCase()
+        .replaceAll(' ', '-')
+        .replaceAll("'", '')
+    };
+
+
 
     
 }
