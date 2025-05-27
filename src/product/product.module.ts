@@ -10,9 +10,14 @@ import { ProductImage } from './entities/product-image.entity';
   providers: [ProductService],
   imports: [
     TypeOrmModule.forFeature([
+      // estos son repositorios
       Product,
       ProductImage
     ]),
   ],
+  exports: [
+    TypeOrmModule,
+    ProductService
+  ]
 })
 export class ProductModule {}
