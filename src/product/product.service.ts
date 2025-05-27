@@ -2,10 +2,12 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { validate as IsUUID } from 'uuid';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { ProductImage } from './entities/product-image.entity';
+import { privateDecrypt } from 'crypto';
 
 
 @Injectable()
@@ -15,15 +17,25 @@ export class ProductService {
 
   constructor(
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>
+    private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
 
   async create(createProductDto: CreateProductDto) {
     try {
-      const product = this.productRepository.create(createProductDto);
+      const {images = [], ...restProperties} = createProductDto;
+
+      const product = this.productRepository.create({
+        ...restProperties,
+        images: images.map(image => this.productImageRepository.create({ url: image })),
+      });
       await this.productRepository.save(product);
-      return product;
+      return {...product,images};
     } catch (error) {
       this.handleDBExceptions(error);
       // If the error is not handled, it will throw an InternalServerErrorException
@@ -33,10 +45,16 @@ export class ProductService {
 
   async findAll(paginationDto:PaginationDto) {
     const {limit=10, offset=0} = paginationDto;
-    return await this.productRepository.find({
+    const product = await this.productRepository.find({
       take: limit,
       skip: offset,
+      relations: {images: true},
     })
+
+    return product.map( product => ({
+      ...product,
+      images: product.images.map(image => image.url) // Map images to just URLs
+    }))
   };
 
   async findOne(term: string) {
@@ -49,7 +67,9 @@ export class ProductService {
         .where('LOWER(title) =:title OR slug =:slug', {
           title: term.toLowerCase(),
           slug: term.toLowerCase()
-        }).getOne();
+        })
+        .leftJoinAndSelect('prod.images', 'prodImages')
+        .getOne();
     };
     if (!product) {
       throw new BadRequestException(`Product with term "${term}" not found`);
@@ -57,17 +77,45 @@ export class ProductService {
     return product;
   };
 
+  //metodo para planar la imagenes 
+  async findOnePlain(term: string) {
+    const {images = [], ...restProduct} = await this.findOne(term);
+    return {
+      ...restProduct,
+      images: images.map(image => image.url) // Map images to just URLs
+    };
+  };
+
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.productRepository.preload({
-      id: id,
-      ...updateProductDto,
-    });
+
+    const {images, ...restProductUpdate} = updateProductDto;
+
+    const product = await this.productRepository.preload({id, ...restProductUpdate});
+
+
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
+
+    // Create query runner to handle images
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      await this.productRepository.save(product);
-      return product;
+      if (images) {
+        // Delete old images
+        await queryRunner.manager.delete(ProductImage, { product: { id } });
+        // Add new images
+        product.images = images.map(image => this.productImageRepository.create({ url: image }));
+      };
+      await queryRunner.manager.save(product);
+      //await this.productRepository.save(product);
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+      // Return the updated product with plain images
+      return this.findOnePlain(id);
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
       console.log(error)
       this.handleDBExceptions(error);
     }
@@ -92,5 +140,20 @@ export class ProductService {
     }
     this.logger.error(error);
     throw new InternalServerErrorException(`Can't create product - ${error.message || 'check server logs'}`); 
-  }
-}
+  };
+  
+
+  async deleteAllProducts() {
+    const query = this.productRepository.createQueryBuilder('product');
+    try {
+      return await query
+      .delete()
+      .where({})
+      .execute();
+    } catch (error) {
+      this.handleDBExceptions(error);
+    } 
+  };
+    
+
+};
