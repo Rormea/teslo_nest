@@ -6,6 +6,8 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcr from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtService } from '@nestjs/jwt';
 // import { DataSource } from 'typeorm';
 
 @Injectable()
@@ -17,6 +19,7 @@ export class AuthService {
     // Aquí podrías inyectar servicios como UserService, JwtService, etc.
     @InjectRepository(User)
     private readonly userRepository: Repository<User>, 
+    private readonly jwtService: JwtService
   ) {}
 
 
@@ -35,8 +38,10 @@ export class AuthService {
       );
       await this.userRepository.save(user);
       delete user.password; // Eliminar la contraseña del objeto de respuesta
-      return user;
-      //TODO:  generar un token JWT de acceso.
+      return {
+        ...user,
+        token: this.getJwtToken({ email:user.email }), // Generar el token JWT
+      } 
     } catch (error) {
       this.handleDBExceptions(error);
     }
@@ -62,9 +67,10 @@ export class AuthService {
       }
  
       // Eliminar la contraseña del objeto de respuesta
-      return user; // Aquí podrías retornar un token JWT si lo implementas
-        //TODO:  generar un token JWT de acceso.
-
+      return {
+        ...user,
+        token: this.getJwtToken({ email:user.email }), // Generar el token JWT
+      } 
     } catch (error) {
       this.handleDBExceptions(error);
     }
@@ -98,5 +104,12 @@ export class AuthService {
       console.log(error)
       throw new InternalServerErrorException(`Can't create product - ${error.message || 'check server logs'}`); 
     };
+
+    private getJwtToken( payload: JwtPayload ): string {
+        // Aquí deberías implementar la lógica para generar un token JWT
+        // Por ejemplo, usando el JwtService de NestJS
+        const token = this.jwtService.sign(payload);
+        return token; 
+    }
     
 }
