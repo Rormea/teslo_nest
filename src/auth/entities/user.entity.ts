@@ -20,7 +20,7 @@ export class User {
     isActive: boolean;
 
     @Column("text", { array: true, default: ['user'] })  
-    role: string[];
+    roles: string[];
     // Aquí puedes agregar más propiedades según tus necesidades
 
     @BeforeInsert()
