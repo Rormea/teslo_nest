@@ -24,11 +24,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     };
 
     async validate(payload: JwtPayload): Promise<User> {
-        const { email } = payload;
+        const { id } = payload;
 
         // Aquí deberías buscar al usuario en tu base de datos por el email
         // Por ejemplo, usando un UserService o un UserRepository
-        const user = await this.userRepository.findOneBy({email});
+        const user = await this.userRepository.findOneBy({id});
 
         if (!user) {
             throw new UnauthorizedException('Token is not valid - user not found');

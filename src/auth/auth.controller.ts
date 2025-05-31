@@ -1,7 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUserDeco } from './decorators/get-user.decorator';
+import { User } from './entities/user.entity';
+import { GetRawHeaders } from './decorators/raw-headers.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -15,6 +19,22 @@ export class AuthController {
   @Post('login')
   loginUser(@Body() loginuserdto: LoginUserDto) {
     return this.authService.loginUser(loginuserdto);
+  }
+
+  @Get('private')
+  @UseGuards( AuthGuard() ) // Protege esta ruta con el guard de JWT
+  testingPrivateRoute(
+    @GetUserDeco() user: User,
+    @GetUserDeco('email') userEmail: string,
+    @GetRawHeaders() rawHeaders: string[],
+  ){
+    return {
+      ok: true,
+      message: 'You are authenticated and can access this private route',
+      user: user,
+      userEmail:userEmail,
+      rawHeaders: rawHeaders,
+    }
   }
 
 /*   @Get()

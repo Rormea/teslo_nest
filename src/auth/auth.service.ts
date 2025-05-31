@@ -40,7 +40,7 @@ export class AuthService {
       delete user.password; // Eliminar la contraseña del objeto de respuesta
       return {
         ...user,
-        token: this.getJwtToken({ email:user.email }), // Generar el token JWT
+        token: this.getJwtToken({ id:user.id }), // Generar el token JWT
       } 
     } catch (error) {
       this.handleDBExceptions(error);
@@ -55,7 +55,7 @@ export class AuthService {
     try {
       const user = await this.userRepository.findOne({
         where: { email },
-        select: { email: true, password: true}, // Selecciona los campos necesarios
+        select: { email: true, password: true, id: true}, // Selecciona los campos necesarios
       });
 
       if (!user) {
@@ -69,7 +69,7 @@ export class AuthService {
       // Eliminar la contraseña del objeto de respuesta
       return {
         ...user,
-        token: this.getJwtToken({ email:user.email }), // Generar el token JWT
+        token: this.getJwtToken({ id:user.id }), // Generar el token JWT
       } 
     } catch (error) {
       this.handleDBExceptions(error);
