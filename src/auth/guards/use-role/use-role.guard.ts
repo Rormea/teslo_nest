@@ -1,6 +1,7 @@
 import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
+import { ROLES_KEY } from 'src/auth/decorators/role-protected.decorator';
 import { User } from 'src/auth/entities/user.entity';
 
 @Injectable()
@@ -13,8 +14,8 @@ export class UseRoleGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.user as User; // Obtiene el usuario del request, que fue inyectado por el guard de JWT
-    const requiredRoles : string[] = this.reflector.get('roles', context.getHandler()) || []; // Obtiene los roles requeridos del handler
-    console.log(requiredRoles)
+    const requiredRoles : string[] = this.reflector.get(ROLES_KEY, context.getHandler()) || []; // Obtiene los roles requeridos del handler
+    //console.log(requiredRoles)
     if (!user) {
       throw new BadRequestException('User not found in request');
     }

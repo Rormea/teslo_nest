@@ -7,6 +7,10 @@ import { GetUserDeco } from './decorators/get-user.decorator';
 import { User } from './entities/user.entity';
 import { GetRawHeaders } from './decorators/raw-headers.decorator';
 import { UseRoleGuard } from './guards/use-role/use-role.guard';
+import { RoleProtected } from './decorators/role-protected.decorator';
+import { ValidRoles } from './interfaces/valid-roles.interfaces';
+import { Auth } from './decorators/auth.decorator'; // Importa el decorador de autenticación
+
 
 @Controller('auth')
 export class AuthController {
@@ -38,8 +42,9 @@ export class AuthController {
     }
   };
 
+  //@SetMetadata('roles', ['admin','super-user']) // Puedes usar SetMetadata para agregar metadatos personalizados, como roles
   @Get('private2')
-  @SetMetadata('roles', ['admin','super-user']) // Puedes usar SetMetadata para agregar metadatos personalizados, como roles
+  @RoleProtected(ValidRoles.admin, ValidRoles.superUser, ValidRoles.user) // Protege esta ruta con el decorador de roles
   @UseGuards( AuthGuard(), UseRoleGuard) // Protege esta ruta con el guard de JWT
   testingPrivateRoute2(
     @GetUserDeco() user: User,
@@ -52,6 +57,21 @@ export class AuthController {
       user: user,
       userEmail:userEmail,
       rawHeaders: rawHeaders,
+    }
+  }
+
+  @Get('private3')
+  @Auth( ValidRoles.admin) // Protege esta ruta con el decorador de roles
+  testingPrivateRoute3(
+    @GetUserDeco() user: User,
+    @GetUserDeco('email') userEmail: string,
+  ){
+    return {
+      ok: true,
+      message: 'You are authenticated and can access this private route',
+      user: user,
+      userEmail:userEmail,
+  
     }
   }
 

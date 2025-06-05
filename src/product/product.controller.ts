@@ -3,17 +3,25 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ValidRoles } from 'src/auth/interfaces/valid-roles.interfaces';
+import { GetUserDeco } from 'src/auth/decorators/get-user.decorator';
+import { User } from 'src/auth/entities/user.entity';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
-  }
+  @Auth() // Protege esta ruta para que solo los administradores y superusuarios puedan crear productos
+  create(@Body() createProductDto: CreateProductDto, 
+  @GetUserDeco() user: User)
+  {
+    return this.productService.create(createProductDto, user);
+  };
 
   @Get()
+
   findAll(@Query() paginationDto:PaginationDto) {
     //console.log(paginationDto) 
     //clg para serciorarnos que llegan como numero
@@ -26,12 +34,18 @@ export class ProductController {
   }
 
   @Patch(':id')
+  @Auth(ValidRoles.admin)
   update(@Param('id', ParseUUIDPipe ) id: string, 
-  @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  @Body() updateProductDto: UpdateProductDto,
+  @GetUserDeco() user: User) {
+    // Aquí puedes usar el usuario si necesitas registrar quién actualizó el producto
+    // Por ejemplo, podrías agregar el usuario al DTO de actualización si es necesario
+    // updateProductDto.user = user; // Si necesitas asociar el usuario que actualiza el producto
+    return this.productService.update(id, updateProductDto, user);
   }
 
   @Delete(':id')
+  @Auth(ValidRoles.admin)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productService.remove(id);
   }

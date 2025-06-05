@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Product } from 'src/product/entities/product.entity';
+import { Column, Entity, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate, OneToMany } from 'typeorm';
 
 
 @Entity({ name: 'users' })
@@ -22,6 +23,14 @@ export class User {
     @Column("text", { array: true, default: ['user'] })  
     roles: string[];
     // Aquí puedes agregar más propiedades según tus necesidades
+
+    @OneToMany(
+        () => Product,
+        (product) => product.user,
+    )
+    product : Product;
+
+
 
     @BeforeInsert()
     checkFieldsBeforeInsert() {
