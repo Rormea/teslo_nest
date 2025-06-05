@@ -26,6 +26,18 @@ export class AuthController {
     return this.authService.loginUser(loginuserdto);
   }
 
+
+  // Ruta para verificar el estado de autenticación
+  // regersa los datso del usuario como ya se encuentra en la base de datos
+  // y si el token es válido, retorna un objeto con el estado de autenticación
+  @Get('check-status')   
+  @Auth()
+  checkAuthStatus(
+    @GetUserDeco() user: User, // Obtiene el usuario autenticado // Obtiene los headers crudos de la solicitud
+  ) {
+    return this.authService.checkAuthStatus(user);
+  }
+
   @Get('private')
   @UseGuards( AuthGuard() ) // Protege esta ruta con el guard de JWT
   testingPrivateRoute(

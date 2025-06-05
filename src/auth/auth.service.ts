@@ -77,7 +77,20 @@ export class AuthService {
   }
 
   
-
+async checkAuthStatus(user: User) {
+  try {
+    const { id, email, fullname } = user;
+    // Aquí puedes realizar cualquier lógica adicional que necesites
+    return {
+      ok: true,
+      ...user,
+      token: this.getJwtToken({ id }), // Generar el token JWT
+    };
+  } catch (error) {
+    this.handleDBExceptions(error);
+  }
+}
+// Aquí puedes implementar los métodos findAll, findOne, update y remove si es necesario
 
 /*   findAll() {
     return `This action returns all auth`;
