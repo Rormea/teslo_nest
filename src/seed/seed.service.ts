@@ -21,7 +21,8 @@ export class SeedService {
 
   async runSeed() {
     await this.deleteTables()
-    await this.insertSeedProducts();
+    const firstUser = await this.insertSeedUsers();
+    await this.insertSeedProducts(firstUser);
     return 'Seed executed successfully';
   }
  
@@ -35,18 +36,34 @@ export class SeedService {
     return true;
   }
 
-  private async insertSeedProducts(){
+  private async insertSeedUsers() {
+    const seedUsers = initialData.users;
+    // To insert products we use the multiple promises technique But here we will use another form of "multiline" insertion
+    const usersToInsert: User[] = []
+    seedUsers.forEach(user => {
+      const newUser = this.userRepository.create(user);
+      usersToInsert.push(newUser);
+    });
+    const usersInDb = await this.userRepository.save(seedUsers);
+    //console.log(usersToInsert);
+    //console.log(seedUsers);
+    //console.log(usersInDb)
+    return usersInDb[0]
+  }
+
+  private async insertSeedProducts(user: User) {
+    // Aquí puedes usar el primer usuario para asociarlo con los productos
     await this.productService.deleteAllProducts();
 
     const seedProducts = initialData.products;
     const insertPromises = [];
-    /* seedProducts.forEach(product => {
+    seedProducts.forEach(product => {
       //(this.productService.create(product)); son varias promesas
       // para insertar en mi arreglo insertPromisse usamo .push
-      insertPromises.push(this.productService.create(product));
-    }); */
+      insertPromises.push(this.productService.create(product, user));
+    });
       await Promise.all(insertPromises);  
-    return true;
+    return true;  
   }
 
 }

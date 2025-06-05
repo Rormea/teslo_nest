@@ -16,9 +16,9 @@ type ValidTypes = 'shirts'|'pants'|'hoodies'|'hats';
 
 interface SeedUser {
     email: string;
-    fullName: string;
+    fullname: string;
     password: string;
-    role: string[]
+    roles: string[]
 }
 
 interface SeedData {
@@ -32,15 +32,15 @@ export const initialData: SeedData = {
     users: [
         {
             email: 'test1@gmail,com',
-            fullName: 'Test User 1',
+            fullname: 'Test User 1',
             password: '123456',
-            role: ['admin']
+            roles: ['admin']
         },
         {
             email: 'test2@gmail,com',
-            fullName: 'Test User 2',
+            fullname: 'Test User 2',
             password: '223456',
-            role: ['user','super-user']
+            roles: ['user','super-user']
         }
     ],
 
