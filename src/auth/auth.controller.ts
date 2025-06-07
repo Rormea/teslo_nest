@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, SetMetadata } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -12,6 +13,7 @@ import { ValidRoles } from './interfaces/valid-roles.interfaces';
 import { Auth } from './decorators/auth.decorator'; // Importa el decorador de autenticación
 
 
+@ApiTags('Auth') // Etiqueta para la documentación de Swagger
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

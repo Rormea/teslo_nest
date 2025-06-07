@@ -17,6 +17,11 @@
 ```
 doker-compose up -d
 ```
+6. ```yarn start:dev````
+
+7. Run SEED
+
+http://localhost:3001/api/seed
 
 ## Compile and run the project
 

@@ -4,7 +4,7 @@ import { initialData } from './data/seed-data';
 import { User } from 'src/auth/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as bcr from 'bcrypt';
+
 
 
 

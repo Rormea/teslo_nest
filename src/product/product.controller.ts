@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -7,21 +8,30 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ValidRoles } from 'src/auth/interfaces/valid-roles.interfaces';
 import { GetUserDeco } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
+import { Product } from './entities/product.entity';
 
+
+
+@ApiTags('Products')
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  
   @Post()
   @Auth() // Protege esta ruta para que solo los administradores y superusuarios puedan crear productos
+  @ApiResponse({status: 201, description: 'Product created successfully', type: Product})
+  @ApiResponse({status: 403, description: 'Forbidden token  or user does not have permission'})
+  @ApiResponse({status: 401, description: 'Unauthorized'})
+  @ApiResponse({status: 400, description: 'Bad Request'})
   create(@Body() createProductDto: CreateProductDto, 
   @GetUserDeco() user: User)
   {
     return this.productService.create(createProductDto, user);
   };
 
+  
   @Get()
-
   findAll(@Query() paginationDto:PaginationDto) {
     //console.log(paginationDto) 
     //clg para serciorarnos que llegan como numero
